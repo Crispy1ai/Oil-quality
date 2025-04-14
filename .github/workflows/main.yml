@@ -1,0 +1,44 @@
+# file: oil_quality_pdf_extractor.py
+
+import os
+import pandas as pd
+import camelot  # Requires ghostscript
+from typing import List
+
+def extract_tables_from_pdf(pdf_path: str, pages: str = 'all') -> List[pd.DataFrame]:
+    """
+    Extracts tables from a PDF file using Camelot.
+
+    Args:
+        pdf_path: Path to the PDF file.
+        pages: Pages to extract tables from (default is all).
+
+    Returns:
+        List of pandas DataFrames.
+    """
+    if not os.path.exists(pdf_path):
+        raise FileNotFoundError(f"PDF not found: {pdf_path}")
+
+    tables = camelot.read_pdf(pdf_path, pages=pages, flavor='lattice')
+    return [table.df for table in tables]
+
+def save_tables_to_csv(tables: List[pd.DataFrame], output_dir: str, base_name: str):
+    """
+    Saves each table as a CSV file.
+
+    Args:
+        tables: List of pandas DataFrames.
+        output_dir: Directory to save the CSV files.
+        base_name: Base name for the CSV files.
+    """
+    os.makedirs(output_dir, exist_ok=True)
+    for i, df in enumerate(tables):
+        csv_path = os.path.join(output_dir, f"{base_name}_table_{i+1}.csv")
+        df.to_csv(csv_path, index=False)
+
+# Example usage
+if __name__ == "__main__":
+    pdf_file = "your_local_file.pdf"
+    output_folder = "./extracted_tables"
+    tables = extract_tables_from_pdf(pdf_file)
+    save_tables_to_csv(tables, output_folder, base_name="oil_quality")
